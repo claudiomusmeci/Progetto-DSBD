@@ -1,0 +1,83 @@
+version: '3'
+
+services:
+  microservizio1:
+    image: notifier
+    container_name: notifier_container
+    build:
+      context: ./microservizio1
+      dockerfile: Dockerfile
+    ports:
+      - 9000:9000
+    depends_on:
+      kafka
+    restart: always
+    environment:
+      KAFKA_BROKER: kafka:9092
+      KAFKA_TOPIC: criptovalute
+      USER_MANAGEMENT_GRPC_SERVER: microservizio2:50051
+      
+    volumes:
+      - type: bind
+        source: 
+        target: 
+      
+  microservizio2:
+    image: user_management
+    container_name: user_management_container
+    build:
+      context: ./microservizio2
+      dockerfile: Dockerfile
+    ports:
+      -10001:10001
+    restart: always
+    depends_on:
+      kafka
+      mysql
+    environment:
+      KAFKA_BROKER: kafka:9092
+      KAFKA_TOPIC: criptovalute
+      MYSQL_HOST: mysql
+      PYTHONUNBUFFERED: 1
+    volumes:
+      
+
+  microservizio3:
+    image: cryptocurrency_retrieval
+    container_name: cryptocurrency_retrieval_container
+    build:
+      context: ./microservizio3
+      dockerfile: Dockerfile
+    ports:
+      - 20002:20002
+    restart: always
+    environment:
+      PYTHONUNBUFFERED: 1
+    volumes:
+      
+
+
+
+  mysql:
+    image: mysql:latest
+    container_name: mysql_container
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: database
+      #MYSQL_USER: user
+      #MYSQL_PASSWORD: password
+    command: --default-authentication-plugin=mysql_native_password
+  
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka_container
+    ports:
+      - 29092:29092
+    
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1

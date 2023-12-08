@@ -1,0 +1,75 @@
+version: '3'
+
+services:
+  microservizio1:
+    image: notifier
+    container_name: notifier_container
+    build:
+      context: ./notifier
+      dockerfile: Dockerfile
+    ports:
+      - 9000:9000
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: always
+    environment:
+      KAFKA_BROKER: kafka:9092
+      KAFKA_TOPIC: criptovalute
+      PYTHONUNBUFFERED: 1
+      
+    volumes:
+      - ./notifier/application:/usr/src/application:ro
+
+
+  microservizio3:
+    image: cryptocurrency_retrieval
+    container_name: cryptocurrency_retrieval_container
+    build:
+      context: ./cryptoretrieval
+      dockerfile: Dockerfile
+    ports:
+      - 20002:20002
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: always
+    environment:
+      KAFKA_BROKER: kafka:9092
+      KAFKA_TOPIC: criptovalute
+      INTERVAL_TIME_SECONDS: 120
+      PYTHONUNBUFFERED: 1
+    volumes:
+      - ./cryptoretrieval/application:/usr/src/application:ro
+
+
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper_container
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka_container
+    depends_on:
+      - zookeeper
+    ports:
+      - 29092:29092
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9092"]
+      interval: 15s
+      timeout: 15s
+      retries: 5
+      start_period: 20s
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+

@@ -10,26 +10,27 @@ producer = KafkaProducer(
     value_serializer=lambda v: json.dumps(v).encode('utf-8')
 )
 
+# https://www.coingecko.com/api/documentation
 #API da cui estrarre i dati
-api_url = 'http://www.randomnumberapi.com/api/v1.0/random?min=100&max=1000&count=3'
+api_url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=eur&order=market_cap_desc&per_page=3&page=1&sparkline=false&locale=en'
 
-#Topic Kafka
-topic = os.environ['KAFKA_TOPIC']
 
 try:
     while True:
+        #Attendo N secondi
+        sleep_time = int(os.environ['INTERVAL_TIME_SECONDS'])
+        time.sleep(sleep_time)
         #Richiesta all'API per ottenere i dati
         response = requests.get(api_url)
         data = response.json()
-
-        #Invia i dati al topic Kafka
-        producer.send(topic, data)
-
-        print('Dati inviati al topic {} Kafka: {}'.format(topic, data))
-        sleep_time = int(os.environ['INTERVAL_TIME_SECONDS'])
-        #Attendo 120 secondi
-        time.sleep(sleep_time)
-
+        #Processo i dati (Scraping)
+        for elemento in data:
+            nuovo_json_string = json.dumps({"nome": elemento["name"], "prezzo": elemento["current_price"], "max_24h": elemento["high_24h"], "min_24h": elemento["low_24h"]}, indent=2)
+            #Topic Kafka
+            topic = elemento['name']
+            #Invia i dati al relativo topic Kafka
+            producer.send(topic, nuovo_json_string)
+            print('Dati inviati al topic {} Kafka: {}'.format(topic, nuovo_json_string))
 except KeyboardInterrupt:
     pass
 

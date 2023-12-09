@@ -23,8 +23,8 @@ services:
 
 
   microservizio3:
-    image: cryptocurrency_retrieval
-    container_name: cryptocurrency_retrieval_container
+    image: retrieval
+    container_name: retrieval_container
     build:
       context: ./cryptoretrieval
       dockerfile: Dockerfile

@@ -1,5 +1,10 @@
 version: '3'
 
+networks:
+  default:
+    name: rete_container
+    driver: bridge
+
 services:
   microservizio1:
     image: notifier
@@ -16,11 +21,25 @@ services:
     environment:
       KAFKA_BROKER: kafka:9092
       KAFKA_TOPIC: criptovalute
+      GRPC_SERVER: microservizio2:50051
       PYTHONUNBUFFERED: 1
-      
     volumes:
       - ./notifier/application:/usr/src/application:ro
 
+  microservizio2:
+    image: management
+    container_name: management_container
+    build:
+      context: ./management
+      dockerfile: Dockerfile
+    ports:
+      - 10001:10001
+    restart: always
+    tty: true
+    environment:
+      PYTHONUNBUFFERED: 1
+    volumes:
+      - ./management/application:/usr/src/application:ro
 
   microservizio3:
     image: retrieval
@@ -36,7 +55,6 @@ services:
     restart: always
     environment:
       KAFKA_BROKER: kafka:9092
-      KAFKA_TOPIC: criptovalute
       INTERVAL_TIME_SECONDS: 120
       PYTHONUNBUFFERED: 1
     volumes:
@@ -71,5 +89,3 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-
-

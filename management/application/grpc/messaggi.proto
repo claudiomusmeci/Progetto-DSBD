@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package mypackage;
+//python -m grpc_tools.protoc -I . --python_out=. --grpc_python_out=. messaggi.proto
+
+message Constraint {
+  // Definisci i campi delle constraint
+  float prezzo = 1;
+  float variazione_percentuale = 2;
+  float prezzo_min_24h = 3;
+  float prezzo_max_24h = 4;
+}
+
+message Topic {
+  // Definisci i campi del topic
+    string topic = 1;
+}
+
+message User {
+  // Definisci i campi dell'utente
+  string nome_utente =1;
+}
+
+service ClientManagement {
+  rpc SendData (RequestData) returns (ResponseData);
+  rpc SendNewSubscriber (Subscriber) returns (ResponseData);
+}
+
+message RequestData {
+  //repeated Constraint constraints = 1;
+  Constraint constraints = 1;
+  Topic topic = 2;
+  User user = 3;
+}
+
+message Subscriber {
+  User user = 1;
+  Topic topic = 2;
+}
+
+message ResponseData {
+  // Definisci i campi della risposta, se necessario
+  string message = 1;
+}

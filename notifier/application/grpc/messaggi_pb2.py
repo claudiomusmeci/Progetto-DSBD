@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0emessaggi.proto\x12\tmypackage\"l\n\nConstraint\x12\x0e\n\x06prezzo\x18\x01 \x01(\x02\x12\x1e\n\x16variazione_percentuale\x18\x02 \x01(\x02\x12\x16\n\x0eprezzo_min_24h\x18\x03 \x01(\x02\x12\x16\n\x0eprezzo_max_24h\x18\x04 \x01(\x02\"\x16\n\x05Topic\x12\r\n\x05topic\x18\x01 \x01(\t\"\x1b\n\x04User\x12\x13\n\x0bnome_utente\x18\x01 \x01(\t\"y\n\x0bRequestData\x12*\n\x0b\x63onstraints\x18\x01 \x01(\x0b\x32\x15.mypackage.Constraint\x12\x1f\n\x05topic\x18\x02 \x01(\x0b\x32\x10.mypackage.Topic\x12\x1d\n\x04user\x18\x03 \x01(\x0b\x32\x0f.mypackage.User\"L\n\nSubscriber\x12\x1d\n\x04user\x18\x01 \x01(\x0b\x32\x0f.mypackage.User\x12\x1f\n\x05topic\x18\x02 \x01(\x0b\x32\x10.mypackage.Topic\"\x1f\n\x0cResponseData\x12\x0f\n\x07message\x18\x01 \x01(\t2\x94\x01\n\x10\x43lientManagement\x12;\n\x08SendData\x12\x16.mypackage.RequestData\x1a\x17.mypackage.ResponseData\x12\x43\n\x11SendNewSubscriber\x12\x15.mypackage.Subscriber\x1a\x17.mypackage.ResponseDatab\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0emessaggi.proto\x12\tmypackage\"l\n\nConstraint\x12\x0e\n\x06prezzo\x18\x01 \x01(\x02\x12\x1e\n\x16variazione_percentuale\x18\x02 \x01(\x02\x12\x16\n\x0eprezzo_min_24h\x18\x03 \x01(\x02\x12\x16\n\x0eprezzo_max_24h\x18\x04 \x01(\x02\"V\n\x0bRequestData\x12*\n\x0b\x63onstraints\x18\x01 \x01(\x0b\x32\x15.mypackage.Constraint\x12\r\n\x05topic\x18\x02 \x01(\t\x12\x0c\n\x04user\x18\x03 \x01(\t\")\n\nSubscriber\x12\x0c\n\x04user\x18\x01 \x01(\t\x12\r\n\x05topic\x18\x02 \x01(\t\"\x1f\n\x0cResponseData\x12\x0f\n\x07message\x18\x01 \x01(\t2\x94\x01\n\x10\x43lientManagement\x12;\n\x08SendData\x12\x16.mypackage.RequestData\x1a\x17.mypackage.ResponseData\x12\x43\n\x11SendNewSubscriber\x12\x15.mypackage.Subscriber\x1a\x17.mypackage.ResponseDatab\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -23,16 +23,12 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
   _globals['_CONSTRAINT']._serialized_start=29
   _globals['_CONSTRAINT']._serialized_end=137
-  _globals['_TOPIC']._serialized_start=139
-  _globals['_TOPIC']._serialized_end=161
-  _globals['_USER']._serialized_start=163
-  _globals['_USER']._serialized_end=190
-  _globals['_REQUESTDATA']._serialized_start=192
-  _globals['_REQUESTDATA']._serialized_end=313
-  _globals['_SUBSCRIBER']._serialized_start=315
-  _globals['_SUBSCRIBER']._serialized_end=391
-  _globals['_RESPONSEDATA']._serialized_start=393
-  _globals['_RESPONSEDATA']._serialized_end=424
-  _globals['_CLIENTMANAGEMENT']._serialized_start=427
-  _globals['_CLIENTMANAGEMENT']._serialized_end=575
+  _globals['_REQUESTDATA']._serialized_start=139
+  _globals['_REQUESTDATA']._serialized_end=225
+  _globals['_SUBSCRIBER']._serialized_start=227
+  _globals['_SUBSCRIBER']._serialized_end=268
+  _globals['_RESPONSEDATA']._serialized_start=270
+  _globals['_RESPONSEDATA']._serialized_end=301
+  _globals['_CLIENTMANAGEMENT']._serialized_start=304
+  _globals['_CLIENTMANAGEMENT']._serialized_end=452
 # @@protoc_insertion_point(module_scope)

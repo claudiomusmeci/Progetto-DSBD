@@ -11,9 +11,9 @@ def send_constraint_to_server(prezzo, variazione_percentuale, prezzo_min_24h, pr
 
     #Costruisco la richiesta con un insieme di constraint, un topic e un utente
     request = pb2.RequestData(
-        constraints=pb2.Constraint(field1=prezzo, field2=variazione_percentuale, field3=prezzo_min_24h, field4=prezzo_max_24h),
-        topic=pb2.Topic(field1=topic),  # Sostituisci con i dati del tuo topic
-        user=pb2.User(field1=user)   # Sostituisci con i dati del tuo utente
+        constraints=pb2.Constraint(prezzo=prezzo, variazione_percentuale=variazione_percentuale, prezzo_min_24h=prezzo_min_24h, prezzo_max_24h=prezzo_max_24h),
+        topic=pb2.Topic(topic=topic),
+        user=pb2.User(nome_utente=user)
     )
     #Chiamata al metodo del servizio
     response = stub.SendData(request)
@@ -25,39 +25,34 @@ def send_subscriber_to_server(utente_fornito, topic_fornito):
 
     #Costruisco la richiesta con un utente e un insieme di topic
     request = pb2.Subscriber(
-        user=pb2.User(nome_utente=utente_fornito),
-        topic=pb2.Topic(topic=topic_fornito)
+        user=utente_fornito,
+        topic=topic_fornito
     )
     # Chiamata al metodo del servizio
     response = stub.SendNewSubscriber(request)
     print("Response received:", response)
 
 def main():
-    
     while True:
-        time.sleep(150)
         print('Scelta')
         print('1) Aggiungi utente ad un topic')
         print('2) Aggiungi dei vincoli')
         scelta = input()
         match int(scelta):
             case 1:
-                print("Inserisci il nome dell'utente")
-                utente = input()
-                print("Inserisci un topic: [Bitcoin, Ethereum, Tether]")
-                topic = input()
+                utente = input("Inserisci il nome dell'utente")
+                topic = input("Inserisci un topic: [Bitcoin, Ethereum, Tether]")
                 send_subscriber_to_server(utente, topic)
+                #Inserisco nel database
                 
             case 2:
-                print("Inserisci il nome dell'utente")
-                utente = input()
-                print("Inserisci un topic: [Bitcoin, Ethereum, Tether]")
-                topic = input()
-                print("Inserisci i vincoli")
-                str_vincoli = input()
+                utente = input("Inserisci il nome dell'utente")
+                topic = input("Inserisci un topic: [Bitcoin, Ethereum, Tether]")
+                str_vincoli = input("Inserisci i vincoli separati da una virgola: prezzo, variazione percentuale, max_24h, min_24h")
                 vincoli = str_vincoli.split(',')
                 if len(vincoli) == 4:
                     send_constraint_to_server(vincoli[0], vincoli[1], vincoli[2], vincoli[3], topic, utente)
+                    #Inserisco nel database
 
             case _:
                 print('Scelta non valida')

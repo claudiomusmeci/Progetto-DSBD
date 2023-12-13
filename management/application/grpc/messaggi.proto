@@ -11,16 +11,6 @@ message Constraint {
   float prezzo_max_24h = 4;
 }
 
-message Topic {
-  // Definisci i campi del topic
-    string topic = 1;
-}
-
-message User {
-  // Definisci i campi dell'utente
-  string nome_utente =1;
-}
-
 service ClientManagement {
   rpc SendData (RequestData) returns (ResponseData);
   rpc SendNewSubscriber (Subscriber) returns (ResponseData);
@@ -29,13 +19,13 @@ service ClientManagement {
 message RequestData {
   //repeated Constraint constraints = 1;
   Constraint constraints = 1;
-  Topic topic = 2;
-  User user = 3;
+  string topic = 2;
+  string user = 3;
 }
 
 message Subscriber {
-  User user = 1;
-  Topic topic = 2;
+  string user = 1;
+  string topic = 2;
 }
 
 message ResponseData {

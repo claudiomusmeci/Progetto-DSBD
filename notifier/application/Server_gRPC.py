@@ -13,6 +13,7 @@ class ClientManagementService(pb2_grpc.ClientManagementServicer):
         print("Topic:", request.topic)
         print("User:", request.user)
         response_message = f"Data received successfully for user {request.user.nome_utente}"
+        
         return pb2.ResponseData(message=response_message)
 
     def SendNewSubscriber(self, request, context):

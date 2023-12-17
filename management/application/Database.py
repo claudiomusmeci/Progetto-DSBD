@@ -47,20 +47,19 @@ class DatabaseManager():
                     cursor.execute("SELECT * FROM Utente WHERE email = %s", (email_utente,))
                     user_exists = cursor.fetchone()
                     if user_exists is None:
-                        new_user = input("Inserisci i valori separati da una virgola: nome,cognome,email,telefono")
+                        new_user = input("Inserisci i valori separati da una virgola: nome,cognome,email,telefono ")
                         dati_user = new_user.split(',')
                         cursor.execute("INSERT INTO Utente (nome, cognome, email, telefono) VALUES (%s,%s,%s,%s)", (dati_user[0],dati_user[1],dati_user[2],dati_user[3]))
-            
                     #Inserisco l'entry nella tabella Sottoscrizione
-                    cursor.execute("INSERT INTO Sottoscrizione (email_utente, topic_utente) VALUES (%s, %s)", (email_utente, topic))
+                    cursor.execute("INSERT INTO Sottoscrizione (email_utente, topic_utente) VALUES (%s, %s)", (dati_user[2], topic))
                     db.commit()
-                    print(f"Sottoscrizione aggiunta per {email_utente} al topic {topic}")
+                    print(f"Sottoscrizione aggiunta per {dati_user[2]} al topic {topic}")
                     return True
             else:
                 print(f"Il topic '{topic}' non esiste.")
 
         except Error as e :
-            print("Errore nell'aggiunta della sottoscrizione")
+            print("Errore nell'aggiunta della sottoscrizione ", e)
             return False
         finally:
             cursor.close()

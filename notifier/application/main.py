@@ -9,19 +9,27 @@ sys.path.append('./grpc')
 import messaggi_pb2 as pb2
 import messaggi_pb2_grpc as pb2_grpc
 
-def avvisa_utente(valori_ricevuti, vincoli_utente):
-    print("Notifico l'utente")
+def avvisa_utente(user, topic, valori_ricevuti, vincoli_utente):
+    vincoli=json.loads(vincoli_utente)
+    if(valori_ricevuti['variazione_percentuale'] >= vincoli['variazione_percentuale']):
+        print("Notifico l'utente {}, violazione dei vincoli per il topic {}".format(user, topic))
+
+
 
 def gestisci_messaggio(user, message):
     # Elabora il messaggio
     data = json.loads(message.value)
-    print('{} Nuovi dati dal topic {} Kafka: {}'.format(user, message.topic, data))
+    print("Utente {}".format(user))
+    print("Topic {}".format(message.topic))
+    print("{}".format(data))
+
     #Implementare la logica per avvisare l'utente
     user_info = subscriptions.get(user)
     if user_info and user_info['topics'].get(message.topic):
         vincoli_topic = user_info['topics'][message.topic]['vincoli']
-        print(user_info['topics'][message.topic]['vincoli'])
-        #avvisa_utente(data, vincoli_topic)
+        if vincoli_topic:
+            avvisa_utente(user, message.topic, data, vincoli_topic)
+        #avvisa_utente(user, data, vincoli_topic)
 
 def sottoscrivi_utenti(user, topics, lista_thread):
     nome_utente=user.split('@')
@@ -64,9 +72,20 @@ class ClientManagementService(pb2_grpc.ClientManagementServicer):
         print("Topic:", request.topic)
         print("User:", request.user)
 
+        # Converti l'oggetto Constraint in un dizionario Python
+        constraints_dict = {
+            "prezzo": request.constraints.prezzo,
+            "variazione_percentuale": request.constraints.variazione_percentuale,
+            "prezzo_min_24h": request.constraints.prezzo_min_24h,
+            "prezzo_max_24h": request.constraints.prezzo_max_24h,
+        }
+
+        # Converti il dizionario in una rappresentazione JSON
+        constraints_json = json.dumps(constraints_dict)
+
         user_info = subscriptions.get(request.user)
         if user_info and user_info['topics'].get(request.topic):
-            user_info['topics'][request.topic]['vincoli'] = request.constraints
+            user_info['topics'][request.topic]['vincoli'] = constraints_json
             response_message = f"Vincoli received successfully for user {request.user}, in topic {request.topic}"
         else:
             response_message = f"User {request.user} not found in subscriptions."
@@ -96,6 +115,7 @@ class ClientManagementService(pb2_grpc.ClientManagementServicer):
 if __name__ == '__main__':
     subscriptions = {}
     lista_thread = []
+    i=0
     main()
     #Attendo che tutti i thread terminino (anche se non è previsto che essi terminino)
     for thread in lista_thread:

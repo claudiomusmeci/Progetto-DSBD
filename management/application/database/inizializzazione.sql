@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS Vincoli (
     email_utente VARCHAR(255),
     topic_utente VARCHAR(255),
     prezzo float,
-    prezz_max float,
+    prezzo_max float,
     prezzo_min float,
     variazione_percentuale float,
     PRIMARY KEY (email_utente, topic_utente),
@@ -48,17 +48,17 @@ INSERT INTO Sottoscrizione (email_utente, topic_utente) VALUES ('utente2@example
 INSERT INTO Sottoscrizione (email_utente, topic_utente) VALUES ('utente3@example.com', 'Bitcoin');
 
 -- Inserimento dei Vincoli
-INSERT INTO Vincoli (email_utente, topic_utente, prezzo, prezz_max, prezzo_min, variazione_percentuale)
+INSERT INTO Vincoli (email_utente, topic_utente, prezzo, prezzo_max, prezzo_min, variazione_percentuale)
 VALUES ('utente1@example.com', 'Bitcoin', 50000, 55000, 48000, 5.0);
 
-INSERT INTO Vincoli (email_utente, topic_utente, prezzo, prezz_max, prezzo_min, variazione_percentuale)
+INSERT INTO Vincoli (email_utente, topic_utente, prezzo, prezzo_max, prezzo_min, variazione_percentuale)
 VALUES ('utente1@example.com', 'Ethereum', 3000, 3300, 2800, 4.5);
 
-INSERT INTO Vincoli (email_utente, topic_utente, prezzo, prezz_max, prezzo_min, variazione_percentuale)
+INSERT INTO Vincoli (email_utente, topic_utente, prezzo, prezzo_max, prezzo_min, variazione_percentuale)
 VALUES ('utente2@example.com', 'Ethereum', 3100, 3400, 2900, 3.0);
 
-INSERT INTO Vincoli (email_utente, topic_utente, prezzo, prezz_max, prezzo_min, variazione_percentuale)
+INSERT INTO Vincoli (email_utente, topic_utente, prezzo, prezzo_max, prezzo_min, variazione_percentuale)
 VALUES ('utente2@example.com', 'Bitcoin', 48000, 52000, 45000, 6.0);
 
-INSERT INTO Vincoli (email_utente, topic_utente, prezzo, prezz_max, prezzo_min, variazione_percentuale)
+INSERT INTO Vincoli (email_utente, topic_utente, prezzo, prezzo_max, prezzo_min, variazione_percentuale)
 VALUES ('utente3@example.com', 'Bitcoin', 49000, 53000, 46000, 5.5);

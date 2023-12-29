@@ -30,7 +30,7 @@ try:
             if prezzo_precedente[topic] > 0:
                 variazione_percentuale = (prezzo - prezzo_precedente[topic])/prezzo_precedente[topic] * 100
             nuovo_json_string = json.dumps({"nome": elemento["name"], "prezzo": elemento["current_price"], "max_24h": elemento["high_24h"], "min_24h": elemento["low_24h"], "variazione_percentuale": variazione_percentuale}, indent=2)
-            #Invia i dati al relativo topic Kafka
+            #Pubblica i dati nel relativo topic Kafka
             producer.send(topic, nuovo_json_string)
             print('Dati inviati al topic {} Kafka: {}'.format(topic, nuovo_json_string))
             prezzo_precedente[topic] = prezzo

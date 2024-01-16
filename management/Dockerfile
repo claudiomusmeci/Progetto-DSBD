@@ -6,5 +6,6 @@ COPY application/ ./
 RUN pip install grpcio
 RUN pip install grpcio-tools
 RUN pip install mysql-connector-python
+RUN pip install Flask
 
 CMD ["python", "main.py"]

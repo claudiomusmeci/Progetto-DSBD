@@ -4,6 +4,7 @@ package mypackage;
 //python -m grpc_tools.protoc -I . --python_out=. --grpc_python_out=. messaggi.proto
 
 message Constraint {
+  // Definisci i campi delle constraint
   float prezzo = 1;
   float variazione_percentuale = 2;
   float prezzo_min_24h = 3;
@@ -28,5 +29,6 @@ message Subscriber {
 }
 
 message ResponseData {
+  // Definisci i campi della risposta, se necessario
   string message = 1;
 }

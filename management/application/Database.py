@@ -25,7 +25,7 @@ class DatabaseManager():
         return database
 
     #Interazioni con database
-    def inserisci_subscriber(self, email_utente, topic) :
+    def inserisci_subscriber(self, email_utente, topic, nome, cognome, telefono) :
         db = self.connect()
         if db is None:
             return False
@@ -42,14 +42,12 @@ class DatabaseManager():
                     print("L'utente è già sottoscritto al topic")
                     return False
                 else:
-                    #Verifico l'esistenza dell'utente
+                    # Verifica l'esistenza dell'utente
                     cursor.execute("SELECT * FROM Utente WHERE email = %s", (email_utente,))
                     user_exists = cursor.fetchone()
                     if user_exists is None:
-                        new_user = input("Inserisci i valori separati da una virgola: nome,cognome,telefono ")
-                        dati_user = new_user.split(',')
-                        cursor.execute("INSERT INTO Utente (nome, cognome, email, telefono) VALUES (%s,%s,%s,%s)", (dati_user[0],dati_user[1],email_utente,dati_user[2]))
-                    #Inserisco l'entry nella tabella Sottoscrizione
+                        cursor.execute("INSERT INTO Utente (nome, cognome, email, telefono) VALUES (%s,%s,%s,%s)", (nome, cognome, email_utente, telefono))
+                    # Inserisci l'entry nella tabella Sottoscrizione
                     cursor.execute("INSERT INTO Sottoscrizione (email_utente, topic_utente) VALUES (%s, %s)", (email_utente, topic))
                     db.commit()
                     print(f"Sottoscrizione aggiunta per {email_utente} al topic {topic}")

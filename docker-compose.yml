@@ -22,6 +22,8 @@ services:
       KAFKA_BROKER: kafka:9092
       KAFKA_TOPIC: criptovalute
       GRPC_SERVER: management:50051
+      MITTENTE: sostituire
+      PASSWORD: sostituire
       PYTHONUNBUFFERED: 1
     volumes:
       - ./notifier/application:/usr/src/application:ro

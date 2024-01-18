@@ -19,4 +19,4 @@ docker compose down -v
 ed eseguire nuovamente il comando inziale di avvio.
 
 ### Info
-Il sistema presenta anche un db manager phpMyAdmin per monitorare il database, è possibile accedervi attraverso <a href="http://localhost:8081" target="_blank">'localhost:8080'</a>
+Il sistema presenta anche un db manager phpMyAdmin per monitorare il database, è possibile accedervi attraverso <a href="http://localhost:8081" target="_blank">'localhost:8081'</a>

@@ -3,9 +3,9 @@
 ## Configurazione
 Una volta clonata la repository è necessario eseguire il seguente comando da terminale:
 
-'''bash
+```bash
 docker-compose up -d
-'''
+```
 
 Affinchè il sistema entri in funzione correttamente, è necessario attendere qualche minuto (circa 2-3).
 
@@ -13,9 +13,9 @@ Per interagire con il sistema è necessario inviare delle richieste HTTP all'end
 
 In caso di eventuali errori, è necessario eseguire:
 
-'''bash
+```bash
 docker compose down -v
-'''
+```
 ed eseguire nuovamente il comando inziale di avvio.
 
 ### Info

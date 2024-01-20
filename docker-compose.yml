@@ -71,12 +71,28 @@ services:
     volumes:
       - ./cryptoretrieval/application:/usr/src/application:ro
 
+  sla-manager:  
+    image: sla-manager
+    container_name: sla_manager_container
+    build:
+      context: ./sla_manager
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000  
+    depends_on:
+      prometheus:
+        condition: service_started
+    restart: always
+    environment:
+      PROMETHEUS_URL: http://prometheus:9090
+    volumes:
+      - ./sla_manager/application:/usr/src/application:ro
+
   mysql:
     image: mysql:latest
     container_name: mysql_container
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: database
     healthcheck:
       test: ["CMD", "curl", "http://localhost:3306"]
       interval: 15s
@@ -84,7 +100,7 @@ services:
       retries: 5
       start_period: 20s
     volumes:  
-      - ./management/application/database:/docker-entrypoint-initdb.d
+      - ./database:/docker-entrypoint-initdb.d
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -128,3 +144,31 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_CREATE_TOPICS: "criptovalute:2:1"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus_container
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    depends_on:
+      - notifier
+      - management
+      - retrieval
+      - cadvisor
+ 
+  cadvisor:
+    image: google/cadvisor:latest
+    container_name: cadvisor_container
+    ports:
+      - 8080:8080
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    command: [ "--housekeeping_interval", "5s", "--docker_only"]
+

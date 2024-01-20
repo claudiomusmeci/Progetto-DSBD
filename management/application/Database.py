@@ -13,7 +13,7 @@ class DatabaseManager():
                     host=os.environ['MYSQL_HOST'],
                     user="root",
                     password="password",
-                    database="database"
+                    database="sottoscrizioni"
                 )
                 if database.is_connected():
                     print('Connection established')

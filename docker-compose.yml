@@ -84,6 +84,7 @@ services:
         condition: service_started
     restart: always
     environment:
+      MYSQL_HOST: mysql
       PROMETHEUS_URL: http://prometheus:9090
     volumes:
       - ./sla_manager/application:/usr/src/application:ro

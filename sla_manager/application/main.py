@@ -2,6 +2,7 @@ from prometheus_api_client import PrometheusConnect
 from flask import Flask, request, jsonify
 from Database import DatabaseManager
 import time
+from traceback import format_exc
 
 app = Flask(__name__)
 database = DatabaseManager()
@@ -43,13 +44,68 @@ def index():
     endpoints = istruzioni_API()
     return jsonify(endpoints)
 
-@app.route('/<metrica>')
+@app.route('/<metrica>', methods=['GET'])
 def metriche_prometheus(metrica):
     #Esempio di query (container_network_receive_errors_total{container_label_com_docker_compose_service='retrieval'})
     prometheus = PrometheusConnect(url=prometheus_url, disable_ssl=True)
+    metrica = str(metrica)
     result=prometheus.custom_query(metrica)
     return jsonify(result)
 
+@app.route('/metriche_attuali_sla', methods=['GET'])
+def metriche_attuali_prometheus():
+    lista_metriche = database.getMetriche()
+    response = {}
+    if lista_metriche:
+        prometheus = PrometheusConnect(url=prometheus_url, disable_ssl=True)
+        for metrica in lista_metriche:
+            nome_metrica=str(metrica[0])
+            response_metrica=[]
+            try:
+                result = prometheus.custom_query(nome_metrica)
+                for elemento in result:
+                    if(elemento['metric'].get('container_label_com_docker_compose_service')):
+                        response_metrica.append({'nome_servizio': elemento['metric'].get('container_label_com_docker_compose_service'), 'valore attuale':elemento['value'][1]})
+            except Exception as e:
+                print(f"Errore nella metrica '{nome_metrica}': {format_exc()}")
+                continue
+            response[nome_metrica] = response_metrica
+    return jsonify(response)
+
+@app.route('/valori_desiderati_sla', methods=['GET'])
+def valori_desiderati_sla():
+    lista_metriche = database.getMetriche()
+    response = []
+    if lista_metriche:
+        for metrica in lista_metriche:
+            response.append({metrica[0]:metrica[1]})
+    return jsonify(response)
+
+@app.route('/violazioni_metriche_sla', methods=['GET'])
+def violazioni_metriche_sla():
+    lista_metriche = database.getMetriche()
+    response = {}
+    if lista_metriche:
+        prometheus = PrometheusConnect(url=prometheus_url, disable_ssl=True)
+        for metrica in lista_metriche:
+            nome_metrica=str(metrica[0])
+            valore_minimo_metrica = float(metrica[2])
+            valore_massimo_metrica = float(metrica[3])
+            response_metrica=[]
+            try:
+                result = prometheus.custom_query(nome_metrica)
+                for elemento in result:
+                    if(elemento['metric'].get('container_label_com_docker_compose_service')):
+                        valore = float(elemento['value'][1])
+                        if(valore>=valore_massimo_metrica):
+                            response_metrica.append({nome_metrica:'SLA violato', 'nome_servizio': elemento['metric'].get('container_label_com_docker_compose_service')})
+                        else:
+                            response_metrica.append({nome_metrica:'SLA non violato', 'nome_servizio': elemento['metric'].get('container_label_com_docker_compose_service')})
+            except Exception as e:
+                print(f"Errore nella metrica '{nome_metrica}': {format_exc()}")
+                continue
+            response[nome_metrica] = response_metrica
+    return jsonify(response)
 
 """
 @app.route('/sla', methods=['POST'])

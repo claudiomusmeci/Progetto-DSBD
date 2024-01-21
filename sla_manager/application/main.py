@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify
 from Database import DatabaseManager
 import time
 from traceback import format_exc
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 database = DatabaseManager()
@@ -44,6 +45,7 @@ def index():
     endpoints = istruzioni_API()
     return jsonify(endpoints)
 
+'''
 @app.route('/<metrica>', methods=['GET'])
 def metriche_prometheus(metrica):
     #Esempio di query (container_network_receive_errors_total{container_label_com_docker_compose_service='retrieval'})
@@ -51,6 +53,7 @@ def metriche_prometheus(metrica):
     metrica = str(metrica)
     result=prometheus.custom_query(metrica)
     return jsonify(result)
+'''
 
 @app.route('/metriche_attuali_sla', methods=['GET'])
 def metriche_attuali_prometheus():
@@ -81,6 +84,35 @@ def valori_desiderati_sla():
             response.append({metrica[0]:metrica[1]})
     return jsonify(response)
 
+@app.route('/aggiorna_metrica_sla', methods=['POST'])
+def aggiorna_metrica_sla():
+    data = request.get_json()
+    
+    nome_metrica = data.get('metrica')
+    valore_desiderato = data.get('valore_desiderato')
+    valore_minimo = data.get('valore_minimo')
+    valore_massimo = data.get('valore_massimo')
+
+    esito = database.aggiorna_sla(nome_metrica, valore_desiderato, valore_minimo, valore_massimo)
+    if esito:
+        response = 'Metrica aggiunta o aggiornata in SLA'
+    else:
+        response = 'Errore nella aggiunta della metrica in SLA'
+    
+    return response
+
+@app.route('/elimina_metrica_sla', methods=['POST'])
+def elimina_metrica_sla():
+    data = request.get_json()
+    nome_metrica = data.get('metrica')
+    esito = database.elimina_sla(nome_metrica)
+    if esito:
+        response = 'Metrica eliminata da SLA'
+    else:
+        response = 'Errore nella rimozione della metrica in SLA'
+    
+    return response
+
 @app.route('/violazioni_metriche_sla', methods=['GET'])
 def violazioni_metriche_sla():
     lista_metriche = database.getMetriche()
@@ -107,6 +139,38 @@ def violazioni_metriche_sla():
             response[nome_metrica] = response_metrica
     return jsonify(response)
 
+@app.route('/violazioni_tempo_sla', methods=['GET'])
+def violazioni_tempo_sla():
+    #data = request.json
+    lista_metriche = database.getMetriche()
+    response = {}
+    data='[1h]'
+    if lista_metriche:
+        prometheus = PrometheusConnect(url=prometheus_url, disable_ssl=True)
+        for metrica in lista_metriche:
+            nome_metrica=str(metrica[0])
+            valore_minimo_metrica = float(metrica[2])
+            valore_massimo_metrica = float(metrica[3])
+            response_metrica=[]
+            try:
+                query = nome_metrica +"{container_label_com_docker_compose_project ='progettodsbdv2'}"+data
+                result = prometheus.custom_query(query)
+                return jsonify(result)
+                
+                '''
+                for elemento in result:
+                    if(elemento['metric'].get('container_label_com_docker_compose_service')):
+                        valore = float(elemento['value'][1])
+                        if(valore>=valore_massimo_metrica):
+                            response_metrica.append({nome_metrica:'SLA violato', 'nome_servizio': elemento['metric'].get('container_label_com_docker_compose_service')})
+                        else:
+                            response_metrica.append({nome_metrica:'SLA non violato', 'nome_servizio': elemento['metric'].get('container_label_com_docker_compose_service')})
+                '''
+            except Exception as e:
+                print(f"Errore nella metrica '{nome_metrica}': {format_exc()}")
+                continue
+            response[nome_metrica] = response_metrica
+    return jsonify(response)
 """
 @app.route('/sla', methods=['POST'])
 def create_or_update_sla():

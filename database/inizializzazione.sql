@@ -100,10 +100,8 @@ INSERT INTO Metrica (metric_name) VALUES ('container_network_receive_errors_tota
 INSERT INTO Metrica (metric_name) VALUES ('container_network_transmit_errors_total');
 INSERT INTO Metrica (metric_name) VALUES ('container_start_time_seconds');
 
-INSERT INTO sla_metrics (metric_name, desired_value, range_low, range_high) VALUES ('container_cpu_load_average_10s', 15, 0.0, 100.0);
+INSERT INTO sla_metrics (metric_name, desired_value, range_low, range_high) VALUES ('container_cpu_load_average_10s', 15, 0.0, 35.0);
 INSERT INTO sla_metrics (metric_name, desired_value, range_low, range_high) VALUES ('container_fs_io_time_seconds_total', 15, 0.0, 100.0);
-INSERT INTO sla_metrics (metric_name, desired_value, range_low, range_high) VALUES ('container_memory_usage_bytes', 15, 0.0, 100.0);
-INSERT INTO sla_metrics (metric_name, desired_value, range_low, range_high) VALUES ('container_memory_failcnt', 2, 0.0, 10);
+INSERT INTO sla_metrics (metric_name, desired_value, range_low, range_high) VALUES ('container_memory_usage_bytes', 15, 0.0, 520000000);
 INSERT INTO sla_metrics (metric_name, desired_value, range_low, range_high) VALUES ('container_network_receive_errors_total', 2, 0.0, 10);
 INSERT INTO sla_metrics (metric_name, desired_value, range_low, range_high) VALUES ('container_network_transmit_errors_total', 2, 0.0, 10);
-INSERT INTO sla_metrics (metric_name, desired_value, range_low, range_high) VALUES ('container_start_time_seconds', 150, 0.0, 420);

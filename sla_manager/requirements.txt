@@ -1,4 +1,8 @@
 Flask
 requests
 mysql-connector-python
-prometheus-api-client
+prometheus-api-client==0.5.4
+numpy
+scipy
+pandas
+pmdarima

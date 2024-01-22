@@ -1,9 +1,11 @@
 from prometheus_api_client import PrometheusConnect
 from flask import Flask, request, jsonify
 from Database import DatabaseManager
-import time
 from traceback import format_exc
-from datetime import datetime, timedelta
+from scipy.stats import norm
+import pandas as pd
+from pmdarima import auto_arima
+
 
 app = Flask(__name__)
 database = DatabaseManager()
@@ -66,6 +68,7 @@ def metriche_attuali_prometheus():
             response_metrica=[]
             try:
                 result = prometheus.custom_query(nome_metrica)
+                return jsonify(result)
                 for elemento in result:
                     if(elemento['metric'].get('container_label_com_docker_compose_service')):
                         response_metrica.append({'nome_servizio': elemento['metric'].get('container_label_com_docker_compose_service'), 'valore attuale':elemento['value'][1]})
@@ -171,6 +174,113 @@ def violazioni_tempo_sla():
                 continue
             response[nome_metrica] = response_metrica
     return jsonify(response)
+
+@app.route('/probabilita_variazione_metriche', methods=['GET']) #Sostituire il numero di minuti con metodo POST
+def probabilita_variazione_metriche():
+    lista_metriche = database.getMetriche()
+    data = request.get_json()
+    minuti = int(data['minuti'])
+    response = {}
+    if lista_metriche:
+        prometheus = PrometheusConnect(url=prometheus_url, disable_ssl=True)
+        for metrica in lista_metriche:
+            nome_metrica = str(metrica[0])
+            valore_massimo_metrica = float(metrica[3])
+            response_metrica = []
+            try:
+                #Recupero da prometheus i dati relativi a valore medio e deviazione standard
+                result = prometheus.custom_query(nome_metrica+'{container_label_com_docker_compose_project="progettodsbdv2"}[30m]')
+                #return jsonify(result)
+                result = prometheus.custom_query('avg'+'('+nome_metrica+'{container_label_com_docker_compose_project="progettodsbdv2"})')
+                mean_value = float(result[0]["value"][1])
+                result = prometheus.custom_query('stddev'+'('+nome_metrica+'{container_label_com_docker_compose_project="progettodsbdv2"})')
+                std_dev = float(result[0]["value"][1])
+                
+                # Calcola la probabilità di variazione nei prossimi x minuti
+                if(std_dev != 0):
+                    z_score = (valore_massimo_metrica - mean_value) / std_dev
+                else:
+                    z_score = 0
+                probability = 1 - norm.cdf(z_score)
+                probability_next_interval = 1 - (1 - probability) ** minuti
+                
+                response_metrica.append({
+                    'nome_metrica': nome_metrica,
+                    'probabilita_variazione': probability_next_interval
+                })
+                
+            except Exception as e:
+                print(f"Errore nella metrica '{nome_metrica}': {format_exc()}")
+                continue
+            
+            response[nome_metrica] = response_metrica
+            
+    return jsonify(response)
+
+
+@app.route('/probabilita_violazione_arima', methods=['POST'])
+def probabilita_violazione_arima():
+    lista_metriche = database.getMetriche()
+    response = {}
+    data = request.get_json()
+    minuti = int(data['minuti'])
+    periodi_totali = (minuti * 4) #Il 4 deriva da 60 secondi/15 scrapying time di prometheus
+    if lista_metriche:
+        prometheus = PrometheusConnect(url=prometheus_url, disable_ssl=True)
+        for metrica in lista_metriche:
+            nome_metrica = str(metrica[0])
+            valore_massimo_metrica = float(metrica[3])
+            response_metrica = []
+            try:
+                #Recupero da prometheus i dati relativi a valore medio e deviazione standard
+                result = prometheus.custom_query(nome_metrica+'{container_label_com_docker_compose_project="progettodsbdv2"}[30m]')
+                for elemento in result:
+                    #return jsonify(elemento['values'])
+                    timestamps = [item[0] for item in elemento['values']]
+                    values = [item[1] for item in elemento['values']]
+                    
+                    datetime_objects = pd.to_datetime(timestamps, unit = 's')
+                    numeric_values = pd.to_numeric(values)
+
+                
+                    df = pd.DataFrame({'timestamp': datetime_objects, 'value': numeric_values})
+                    df.set_index('timestamp', inplace=True)
+
+                    #Addestramento del modello ARIMA automatico
+                    model = auto_arima(df['value'], seasonal=False, suppress_warnings=True)
+
+                    #Previsioni per i prossimi n periodi
+                    forecast, conf_int = model.predict(n_periods=periodi_totali, return_conf_int=True)
+                    
+                    #Calcolo la deviazione standard delle previsioni
+                    std_dev_forecast = forecast.std()
+                    mean_value_forecast = forecast.mean()
+
+                    #Calcolo lo z-score
+                    z_score = (valore_massimo_metrica - mean_value_forecast) / std_dev_forecast if std_dev_forecast else 0.0
+                    #Calcolo la probabilità di violazione
+                    probability = 1 - norm.cdf(z_score)
+                    #Calcolo la probabilità di violazione nei prossimi n periodi
+                    probability_next_interval = 1 - (1 - probability) ** periodi_totali
+                    print(probability)
+                    response_metrica.append({
+                    'nome_servizio': elemento['metric'].get('container_label_com_docker_compose_service'),
+                    'probabilita_violazione': probability_next_interval * 100,
+                    'valore_medio':mean_value_forecast,
+                    'deviazione_standard':std_dev_forecast,
+                    'valore_soglia_metrica':valore_massimo_metrica,
+                    'z_score':z_score
+                    }) 
+                    return jsonify(response_metrica) #Calcolato solo per una metrica per non appesantire l'esecuzione
+                
+            except Exception as e:
+                print(f"Errore nella metrica '{nome_metrica}': {format_exc()}")
+                continue
+            
+            response[nome_metrica] = response_metrica
+            
+    return jsonify(response)
+
 """
 @app.route('/sla', methods=['POST'])
 def create_or_update_sla():

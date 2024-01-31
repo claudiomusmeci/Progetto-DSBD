@@ -131,7 +131,7 @@ def violazioni_tempo_sla():
             response[nome_metrica] = response_metrica
     return jsonify(response)
 
-@app.route('/probabilita_variazione_metriche', methods=['GET']) #Sostituire il numero di minuti con metodo POST
+@app.route('/probabilita_variazione_metriche', methods=['POST']) #Sostituire il numero di minuti con metodo POST
 def probabilita_variazione_metriche():
     lista_metriche = database.getMetriche()
     data = request.get_json()
@@ -145,11 +145,9 @@ def probabilita_variazione_metriche():
             response_metrica = []
             try:
                 #Recupero da prometheus i dati relativi a valore medio e deviazione standard
-                result = prometheus.custom_query(nome_metrica+'{container_label_com_docker_compose_project="progettodsbdv2"}[30m]')
-                #return jsonify(result)
-                result = prometheus.custom_query('avg'+'('+nome_metrica+'{container_label_com_docker_compose_project="progettodsbdv2"})')
+                result = prometheus.custom_query('avg'+'('+nome_metrica+')')
                 mean_value = float(result[0]["value"][1])
-                result = prometheus.custom_query('stddev'+'('+nome_metrica+'{container_label_com_docker_compose_project="progettodsbdv2"})')
+                result = prometheus.custom_query('stddev'+'('+nome_metrica+')')
                 std_dev = float(result[0]["value"][1])
                 
                 # Calcola la probabilità di variazione nei prossimi x minuti
@@ -189,55 +187,56 @@ def probabilita_violazione_arima():
             response_metrica = []
             try:
                 #Recupero da prometheus i dati relativi a valore medio e deviazione standard
-                result = prometheus.custom_query(nome_metrica+'{container_label_com_docker_compose_project="progettodsbdv2"}[30m]')
+                result = prometheus.custom_query(nome_metrica+'[30m]')
                 for elemento in result:
                     #return jsonify(elemento['values'])
-                    timestamps = [item[0] for item in elemento['values']]
-                    values = [item[1] for item in elemento['values']]
+                    if(elemento['metric'].get('container_label_com_docker_compose_service')):
+                        timestamps = [item[0] for item in elemento['values']]
+                        values = [item[1] for item in elemento['values']]
                     
-                    datetime_objects = pd.to_datetime(timestamps, unit = 's')
-                    numeric_values = pd.to_numeric(values)
+                        datetime_objects = pd.to_datetime(timestamps, unit = 's')
+                        numeric_values = pd.to_numeric(values)
 
                 
-                    df = pd.DataFrame({'timestamp': datetime_objects, 'value': numeric_values})
-                    df.set_index('timestamp', inplace=True)
+                        df = pd.DataFrame({'timestamp': datetime_objects, 'value': numeric_values})
+                        df.set_index('timestamp', inplace=True)
 
-                    #Addestramento del modello ARIMA automatico
-                    model = auto_arima(df['value'], seasonal=False, suppress_warnings=True)
+                        #Addestramento del modello ARIMA automatico
+                        model = auto_arima(df['value'], seasonal=False, suppress_warnings=True)
 
-                    #Previsioni per i prossimi n periodi
-                    forecast, conf_int = model.predict(n_periods=periodi_totali, return_conf_int=True)
+                        #Previsioni per i prossimi n periodi
+                        forecast, conf_int = model.predict(n_periods=periodi_totali, return_conf_int=True)
                     
-                    #Calcolo la deviazione standard delle previsioni
-                    std_dev_forecast = forecast.std()
-                    mean_value_forecast = forecast.mean()
-                    '''
-                    #Calcolo lo z-score
-                    z_value = (valore_massimo_metrica - mean_value_forecast) / std_dev_forecast if std_dev_forecast else 0.0
-                    #Calcolo la probabilità di violazione
-                    probability = 1 - norm.cdf(z_value)
-                    #Calcolo la probabilità di violazione nei prossimi n periodi
-                    probability_next_interval = 1 - (1 - probability) ** periodi_totali
-                    response_metrica.append({
-                    'nome_servizio': elemento['metric'].get('container_label_com_docker_compose_service'),
-                    'probabilita_violazione': probability_next_interval * 100,
-                    'valore_medio':mean_value_forecast,
-                    'deviazione_standard':std_dev_forecast,
-                    'valore_soglia_metrica':valore_massimo_metrica,
-                    'z_score':z_value
-                    }) 
-                    '''
-                    #Metodo alternativo calcolo probabilità di errore
-                    violations = sum(forecast > valore_massimo_metrica)
-                    print("Valori previsti: ", forecast.values)
-                    print("Violazioni : ",  violations)
-                    probability_next_interval = violations / len(forecast)
-                    response_metrica.append({
-                    'nome_servizio': elemento['metric'].get('container_label_com_docker_compose_service'),
-                    'probabilita_violazione': probability_next_interval * 100,
-                    'valore_soglia_metrica':valore_massimo_metrica
-                    }) 
-                    return jsonify(response_metrica) #Calcolato solo per una metrica per non appesantire l'esecuzione
+                        #Calcolo la deviazione standard delle previsioni
+                        std_dev_forecast = forecast.std()
+                        mean_value_forecast = forecast.mean()
+                        '''
+                        #Calcolo lo z-score
+                        z_value = (valore_massimo_metrica - mean_value_forecast) / std_dev_forecast if std_dev_forecast else 0.0
+                        #Calcolo la probabilità di violazione
+                        probability = 1 - norm.cdf(z_value)
+                        #Calcolo la probabilità di violazione nei prossimi n periodi
+                        probability_next_interval = 1 - (1 - probability) ** periodi_totali
+                        response_metrica.append({
+                        'nome_servizio': elemento['metric'].get('container_label_com_docker_compose_service'),
+                        'probabilita_violazione': probability_next_interval * 100,
+                        'valore_medio':mean_value_forecast,
+                        'deviazione_standard':std_dev_forecast,
+                        'valore_soglia_metrica':valore_massimo_metrica,
+                        'z_score':z_value
+                        }) 
+                        '''
+                        #Metodo alternativo calcolo probabilità di errore
+                        violations = sum(forecast > valore_massimo_metrica)
+                        print("Valori previsti: ", forecast.values)
+                        print("Violazioni : ",  violations)
+                        probability_next_interval = violations / len(forecast)
+                        response_metrica.append({
+                        'nome_servizio': elemento['metric'].get('container_label_com_docker_compose_service'),
+                        'probabilita_violazione': probability_next_interval * 100,
+                        'valore_soglia_metrica':valore_massimo_metrica
+                        }) 
+                return jsonify(response_metrica) #Calcolato solo per una metrica per non appesantire l'esecuzione
                 
             except Exception as e:
                 print(f"Errore nella metrica '{nome_metrica}': {format_exc()}")

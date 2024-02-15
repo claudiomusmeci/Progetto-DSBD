@@ -183,7 +183,7 @@ spec:
     spec:
       containers:
       - name: slamanager-container
-        image: o46002056/sla-manager:0.1
+        image: o46002056/sla-manager:0.2
         ports:
         - containerPort: 3000
         resources:
@@ -192,7 +192,7 @@ spec:
             memory: "512Mi"
         env:
         - name: MYSQL_HOST
-          value: "mysql"
+          value: "mysql-service"
         - name: PROMETHEUS_URL
           value: "http://prometheus:9090"
         - name: INTERVAL_TIME_SECONDS
@@ -554,7 +554,19 @@ spec:
         configMap:
           name: prometheus-configmap  
 ---
-
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+spec:
+  selector:
+    app: prometheus
+  ports:
+    - protocol: TCP
+      port: 9090
+      targetPort: 9090
+  type: NodePort
+---
 # ConfigMap per prometheus.yml
 apiVersion: v1
 kind: ConfigMap
@@ -627,9 +639,17 @@ spec:
         hostPath:
           path: /var/lib/docker
 
+---
 
-
-
-
-   
-
+apiVersion: v1
+kind: Service
+metadata:
+  name: cadvisor-service
+spec:
+  selector:
+    app: cadvisor
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: NodePort

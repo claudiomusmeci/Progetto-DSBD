@@ -234,7 +234,8 @@ def probabilita_violazione_arima():
                         response_metrica.append({
                         'nome_servizio': elemento['metric'].get('container_label_com_docker_compose_service'),
                         'probabilita_violazione': probability_next_interval * 100,
-                        'valore_soglia_metrica':valore_massimo_metrica
+                        'valore_soglia_metrica':valore_massimo_metrica,
+                        'nome_metrica:': nome_metrica
                         }) 
                 return jsonify(response_metrica) #Calcolato solo per una metrica per non appesantire l'esecuzione
                 
